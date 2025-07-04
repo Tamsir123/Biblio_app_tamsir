@@ -1,0 +1,7 @@
+# Variables d'environnement pour Vercel (Frontend)
+
+# URL de l'API backend Render (à mettre à jour après déploiement backend)
+VITE_API_URL=https://votre-backend.onrender.com
+
+# Mode de production
+NODE_ENV=production

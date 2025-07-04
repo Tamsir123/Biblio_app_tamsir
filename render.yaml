@@ -1,0 +1,31 @@
+services:
+  # Backend API Node.js
+  - type: web
+    name: biblio-backend
+    runtime: node
+    plan: free
+    buildCommand: cd backend-gestion-biblio && npm install
+    startCommand: cd backend-gestion-biblio && npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMAIL_USER
+        value: tamsirdiouf294@gmail.com
+      - key: EMAIL_PASS
+        value: ylgo kymz ztlk nysm
+      - key: EMAIL_SERVICE
+        value: gmail
+      - key: FRONTEND_URL
+        value: https://biblio-frontend.vercel.app
+
+databases:
+  # Base de données MySQL
+  - name: biblio-mysql
+    databaseName: bibliotheque_web
+    user: biblio_user
+    plan: free

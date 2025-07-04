@@ -14,6 +14,10 @@
     {
       "src": "/(.*)",
       "dest": "/frontend-gestion-biblio/dist/$1"
+    },
+    {
+      "src": "/.*",
+      "dest": "/frontend-gestion-biblio/dist/index.html"
     }
   ],
   "buildCommand": "cd frontend-gestion-biblio && npm run build",

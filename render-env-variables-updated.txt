@@ -1,0 +1,22 @@
+Variables d'environnement pour Render (Backend) :
+=================================================
+
+NODE_ENV=production
+PORT=5000
+JWT_SECRET=[À générer automatiquement dans Render]
+EMAIL_USER=tamsirdiouf294@gmail.com
+EMAIL_PASS=ylgo kymz ztlk nysm
+EMAIL_SERVICE=gmail
+FRONTEND_URL=https://[VOTRE-APP-NAME].vercel.app
+
+⚠️  Variables à configurer après déploiement :
+============================================
+- JWT_SECRET : Utiliser la fonction "Generate Value" de Render
+- FRONTEND_URL : Remplacer [VOTRE-APP-NAME] par le nom de votre app Vercel
+- DATABASE_URL : Sera fournie automatiquement par Render MySQL ou service externe
+
+📝 Notes importantes :
+====================
+1. Render ne propose MySQL qu'en plan payant
+2. Pour le plan gratuit, utiliser PostgreSQL ou service externe (PlanetScale, Railway)
+3. Adapter le code backend si changement de base de données
