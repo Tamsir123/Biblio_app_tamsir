@@ -1,8 +1,0 @@
-# Variables d'environnement pour Railway - Frontend
-# Copier ces variables dans Railway Dashboard > Variables
-
-# URL de l'API backend (sera mise à jour automatiquement par Railway)
-VITE_API_URL=https://votre-backend.railway.app
-
-# Mode de production
-NODE_ENV=production
