@@ -1,0 +1,5 @@
+# Variables d'environnement pour Vercel (Frontend)
+# À configurer dans Vercel Dashboard > Settings > Environment Variables
+
+# URL de l'API backend Render (à mettre à jour après déploiement)
+VITE_API_URL=https://biblio-backend.onrender.com

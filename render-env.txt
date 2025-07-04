@@ -1,0 +1,25 @@
+# Variables d'environnement pour Render (Backend)
+# À configurer dans Render Dashboard > Environment
+
+NODE_ENV=production
+PORT=10000
+
+# Base de données (sera configuré automatiquement par Render)
+# DATABASE_URL sera fourni par Render MySQL
+# Ou utiliser les variables individuelles :
+# DB_HOST=
+# DB_PORT=3306
+# DB_USER=
+# DB_PASSWORD=
+# DB_NAME=bibliotheque_web
+
+# JWT Secret (générer une nouvelle clé)
+JWT_SECRET=super_secret_jwt_key_for_production_very_long_and_secure_2024
+
+# Configuration Email
+EMAIL_USER=tamsirdiouf294@gmail.com
+EMAIL_PASS=ylgo kymz ztlk nysm
+EMAIL_SERVICE=gmail
+
+# URL du frontend Vercel (à mettre à jour après déploiement)
+FRONTEND_URL=https://biblio-frontend.vercel.app

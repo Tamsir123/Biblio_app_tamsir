@@ -1,0 +1,17 @@
+[Unit]
+Description=Application Biblio - Ngrok Tunnels
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=tamsir
+Group=tamsir
+WorkingDirectory=/home/tamsir/Desktop/Biblio_app
+ExecStart=/home/tamsir/Desktop/Biblio_app/expose-ngrok.sh
+Restart=always
+RestartSec=10
+Environment=HOME=/home/tamsir
+
+[Install]
+WantedBy=multi-user.target
