@@ -77,12 +77,19 @@ class BookController {
         });
       }
 
-      const bookData = req.body;
+      // Nettoyage et typage des données reçues
+      const bookData = {
+        title: req.body.title?.trim(),
+        author: req.body.author?.trim(),
+        isbn: req.body.isbn?.trim() || null,
+        genre: req.body.genre?.trim() || null,
+        description: req.body.description?.trim() || null,
+        total_quantity: parseInt(req.body.total_quantity) || 1,
+        publication_year: parseInt(req.body.publication_year) || null,
+        cover_image: req.file ? `/uploads/covers/${req.file.filename}` : (req.body.cover_image || null)
+      };
 
-      // Si une image de couverture a été uploadée, ajouter le chemin au bookData
-      if (req.file) {
-        bookData.cover_image = `/uploads/covers/${req.file.filename}`;
-      }
+      // available_quantity = total_quantity initialement (géré dans le modèle)
       const bookId = await Book.create(bookData);
 
       res.status(201).json({
@@ -93,14 +100,12 @@ class BookController {
 
     } catch (error) {
       console.error('Erreur lors de la création du livre:', error);
-      
       if (error.code === 'ER_DUP_ENTRY') {
         return res.status(409).json({
           success: false,
           message: 'Un livre avec cet ISBN existe déjà'
         });
       }
-      
       res.status(500).json({
         success: false,
         message: 'Erreur interne du serveur'
@@ -111,6 +116,7 @@ class BookController {
   // Mettre à jour un livre (admin only)
   static async update(req, res) {
     try {
+      console.log('[ROUTE] PUT /api/books/:id appelée');
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -141,6 +147,13 @@ class BookController {
         });
       }
 
+      // LOG: Afficher le body reçu pour debug frontend
+      console.log('--- [BOOK UPDATE] ---');
+      console.log('ID du livre à modifier:', req.params.id);
+      console.log('Body reçu:', req.body);
+      // LOG: Afficher les champs retenus pour la mise à jour
+      console.log('Champs réellement mis à jour:', updateData);
+      
       const updated = await Book.update(id, updateData);
       
       if (!updated) {
