@@ -189,8 +189,8 @@ frontend-gestion-biblio/
 - Le rôle est renvoyé dans le JWT et dans la réponse `/api/auth/login`.
 - Le frontend adapte l'interface selon le rôle reçu (dashboard admin ou étudiant).
 - Détection automatique du rôle selon l’email (admin ou étudiant).
-  - Exemple : `admin@bibliotheque.2ie.edu` → rôle `admin`
-  - Exemple : `etudiant@etu.2ie-edu.org` → rôle `student`
+  - Exemple : `tamsir@admin.2ie.edu` → rôle `admin`
+  - Exemple : `etudiant@edu.2ie-edu.org`ou `etudiant@gmail.com` → rôle `student`
 
 ---
 
