@@ -4,79 +4,6 @@ const { executeQuery, queryOne } = require('../config/database');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 
-// Configuration des domaines pour la détection automatique des rôles
-const ROLE_DOMAINS = {
-  admin: [
-    '@bibliotheque.2ie.edu',
-    '@admin.2ie.edu',
-    '@staff.2ie.edu',
-    '@direction.2ie.edu',
-    '@biblio.com'
-  ],
-  student: [
-    '@etu.2ie-edu.org',
-    '@student.2ie.edu',
-    '@2ie.edu',
-    '@gmail.com', // Temporaire pour les tests
-    '@yahoo.com',
-    '@hotmail.com'
-  ]
-};
-
-/**
- * Détecte automatiquement le rôle en fonction du domaine de l'email
- * @param {string} email - L'adresse email
- * @returns {string} - Le rôle détecté ('admin' ou 'student')
- */
-function detectRoleFromEmail(email) {
-  const emailLower = email.toLowerCase();
-  
-  // Vérifier les domaines admin en premier
-  for (const domain of ROLE_DOMAINS.admin) {
-    if (emailLower.includes(domain)) {
-      return 'admin';
-    }
-  }
-  
-  // Vérifier les domaines étudiants
-  for (const domain of ROLE_DOMAINS.student) {
-    if (emailLower.includes(domain)) {
-      return 'student';
-    }
-  }
-  
-  // Par défaut, retourner 'student' si aucun domaine n'est trouvé
-  return 'student';
-}
-
-// Fonction utilitaire pour nettoyer les données
-const cleanProfileData = (data) => {
-  const cleaned = {};
-  
-  Object.keys(data).forEach(key => {
-    const value = data[key];
-    
-    // Traiter les différents types de champs
-    if (value === null || value === undefined || value === '') {
-      // Ne pas inclure les valeurs vides pour éviter les erreurs de validation
-      return;
-    }
-    
-    // Nettoyer les chaînes de caractères
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (trimmed !== '') {
-        cleaned[key] = trimmed;
-      }
-    } else {
-      // Garder les autres types (boolean, number, etc.)
-      cleaned[key] = value;
-    }
-  });
-  
-  return cleaned;
-};
-
 class UserController {
   // Lister tous les utilisateurs (admin)
   static async getAll(req, res) {
@@ -112,21 +39,12 @@ class UserController {
         });
       }
 
-      // Détection automatique du rôle basée sur le domaine email
-      // Ceci priorise la détection automatique sur le rôle fourni manuellement
-      const detectedRole = detectRoleFromEmail(email);
-      console.log(`🔍 Admin création utilisateur - Détection automatique pour ${email}: ${detectedRole} (fourni: ${role})`);
-      
-      const userId = await User.create({ name, email, password, role: detectedRole });
+      const userId = await User.create({ name, email, password, role });
 
       res.status(201).json({
         success: true,
-        message: `Utilisateur créé avec succès en tant que ${detectedRole}`,
-        data: { 
-          userId,
-          assignedRole: detectedRole,
-          requestedRole: role
-        }
+        message: 'Utilisateur créé avec succès',
+        data: { userId }
       });
 
     } catch (error) {
@@ -173,25 +91,12 @@ class UserController {
         }
       }
 
-      // Détection automatique du rôle si l'email a changé
-      let finalRole = role;
-      if (email !== user.email) {
-        const detectedRole = detectRoleFromEmail(email);
-        console.log(`🔍 Admin modification utilisateur - Détection automatique pour ${email}: ${detectedRole} (fourni: ${role})`);
-        finalRole = detectedRole;
-      }
-
-      const updated = await User.update(id, { name, email, role: finalRole, is_active });
+      const updated = await User.update(id, { name, email, role, is_active });
 
       if (updated) {
         res.json({
           success: true,
-          message: 'Utilisateur mis à jour avec succès',
-          data: {
-            assignedRole: finalRole,
-            requestedRole: role,
-            roleChanged: finalRole !== role
-          }
+          message: 'Utilisateur mis à jour avec succès'
         });
       } else {
         res.status(400).json({
@@ -354,18 +259,8 @@ class UserController {
   // Mettre à jour le profil de l'utilisateur connecté
   static async updateProfile(req, res) {
     try {
-      console.log('🔍 DEBUG - Données reçues (brutes):', req.body);
-      console.log('🔍 DEBUG - User ID:', req.user?.userId);
-      
-      // Nettoyer les données avant validation
-      const cleanedData = cleanProfileData(req.body);
-      req.body = { ...req.body, ...cleanedData };
-      
-      console.log('🔍 DEBUG - Données nettoyées:', cleanedData);
-      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log('❌ DEBUG - Erreurs de validation:', errors.array());
         return res.status(400).json({
           success: false,
           message: 'Données invalides',
@@ -374,9 +269,7 @@ class UserController {
       }
 
       const userId = req.user.userId;
-      const profileData = cleanedData;
-
-      console.log('🔍 DEBUG - Profile data final:', profileData);
+      const profileData = req.body;
 
       // Séparer les données du profil et les préférences
       const { 
@@ -384,53 +277,35 @@ class UserController {
         privacy_profile, receive_recommendations, ...userProfileData 
       } = profileData;
 
-      console.log('🔍 DEBUG - User profile data:', userProfileData);
-      console.log('🔍 DEBUG - Preferences data:', { notification_email, notification_sms, language, theme, privacy_profile, receive_recommendations });
-
-      let profileUpdated = false;
-      let preferencesUpdated = false;
-
       // Mettre à jour le profil utilisateur
       if (Object.keys(userProfileData).length > 0) {
-        console.log('🔄 DEBUG - Mise à jour du profil utilisateur...');
-        profileUpdated = await User.updateProfile(userId, userProfileData);
-        console.log('✅ DEBUG - Profil mis à jour:', profileUpdated);
+        const profileUpdated = await User.updateProfile(userId, userProfileData);
+        if (!profileUpdated) {
+          return res.status(400).json({
+            success: false,
+            message: 'Aucune modification apportée au profil'
+          });
+        }
       }
 
       // Mettre à jour les préférences si présentes
-      const preferences = {};
-      if (notification_email !== undefined) preferences.notification_email = notification_email;
-      if (notification_sms !== undefined) preferences.notification_sms = notification_sms;
-      if (language !== undefined) preferences.language = language;
-      if (theme !== undefined) preferences.theme = theme;
-      if (privacy_profile !== undefined) preferences.privacy_profile = privacy_profile;
-      if (receive_recommendations !== undefined) preferences.receive_recommendations = receive_recommendations;
+      const preferences = {
+        notification_email, notification_sms, language, theme,
+        privacy_profile, receive_recommendations
+      };
       
-      console.log('🔍 DEBUG - Preferences to update:', preferences);
-      
-      if (Object.keys(preferences).length > 0) {
-        console.log('🔄 DEBUG - Mise à jour des préférences...');
-        preferencesUpdated = await User.updatePreferences(userId, preferences);
-        console.log('✅ DEBUG - Préférences mises à jour:', preferencesUpdated);
+      const hasPreferences = Object.values(preferences).some(val => val !== undefined);
+      if (hasPreferences) {
+        await User.updatePreferences(userId, preferences);
       }
 
-      if (!profileUpdated && !preferencesUpdated && Object.keys(profileData).length > 0) {
-        console.log('❌ DEBUG - Aucune modification apportée');
-        return res.status(400).json({
-          success: false,
-          message: 'Aucune modification apportée'
-        });
-      }
-
-      console.log('🎉 DEBUG - Mise à jour terminée avec succès');
       res.json({
         success: true,
         message: 'Profil mis à jour avec succès'
       });
 
     } catch (error) {
-      console.error('❌ DEBUG - Erreur dans updateProfile:', error);
-      console.error('❌ DEBUG - Stack trace:', error.stack);
+      console.error('Erreur lors de la mise à jour du profil:', error);
       res.status(500).json({
         success: false,
         message: error.message || 'Erreur interne du serveur'

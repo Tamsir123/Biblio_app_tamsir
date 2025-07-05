@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 require('dotenv').config();
 
 // Configuration de la base de données
@@ -23,32 +22,9 @@ const errorHandler = require('./middleware/error.middleware');
 
 const app = express();
 
-// Configuration CORS - Support pour développement local
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:8080',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:3001',
-  'http://127.0.0.1:8080'
-].filter((v, i, arr) => Boolean(v) && arr.indexOf(v) === i); // Supprime doublons et valeurs vides
-
+// Configuration CORS
 app.use(cors({
-  origin: (origin, callback) => {
-    // Permettre les requêtes sans origine (comme curl, téléchargement direct d'images, etc.)
-    if (!origin) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log(`❌ CORS: Origine non autorisée: ${origin}`);
-      console.log(`✅ Origines autorisées: ${allowedOrigins.join(', ')}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
   credentials: true
 }));
 
@@ -57,7 +33,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Servir les fichiers statiques (images uploadées)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static('uploads'));
 
 // Route de santé
 app.get('/', (req, res) => {
@@ -81,14 +57,6 @@ app.get('/', (req, res) => {
 // Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
-// Log global pour toutes les requêtes PUT sur /api/books/:id
-app.use('/api/books/:id', (req, res, next) => {
-  if (req.method === 'PUT') {
-    console.log('[DEBUG PUT /api/books/:id] Headers:', req.headers);
-    console.log('[DEBUG PUT /api/books/:id] Body:', req.body);
-  }
-  next();
-});
 app.use('/api/borrowings', borrowingRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
@@ -150,7 +118,8 @@ const startServer = async () => {
         console.log('Borrowings: http://localhost:' + PORT + '/api/borrowings/*');
         console.log('Reviews: http://localhost:' + PORT + '/api/reviews/*');
         console.log('Notifications: http://localhost:' + PORT + '/api/notifications/*');
-        console.log('Analytics: http://localhost:' + PORT + '/api/analytics/*\n');
+        console.log('Analytics: http://localhost:' + PORT + '/api/analytics/*');
+        console.log('Health: http://localhost:' + PORT + '/\n');
       }
     });
     
