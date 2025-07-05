@@ -1,0 +1,9 @@
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://elibrary2ie.edu/sitemap.xml
+
+# Optimize crawling
+Crawl-delay: 10
